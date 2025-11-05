@@ -1,0 +1,116 @@
+import os
+from dotenv import load_dotenv
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
+
+# Загружаем переменные из .env файла
+load_dotenv()
+
+# Получаем токен
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+
+
+WAITING_REPORT = 1
+
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('Привет! Я бот по подсчету зп за смену.')
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Доступные команды:\n"
+        "/start - запуск бота\n"
+        "/salary - подсчет зп кальян мастера за смену\n"
+        "Пример: "
+    )
+    
+async def salary_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('Скинь мне отчет в формате: *название кальяна* x *количество* (*процент скидки*). \n'
+                                    'Пример: 1x5(20), 2x4(30)')
+    return WAITING_REPORT
+
+async def handle_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_text = update.message.text
+    items = user_text.split(",")
+    salary = 0
+    
+    response = "Обработанные данные:\n"
+    for item in items:
+        item = item.strip()
+        try:
+            # Проверяем есть ли скобки с процентом
+            if '(' in item and ')' in item:
+                # Формат "1х5(10%)"
+                name_hookah = item.split('x')[0]
+                rest = item.split('x')[1]
+                count = rest.split('(')[0]
+                percent = rest.split('(')[1].replace('%)', '').replace('%', '')
+                percent_decimal = float(percent) / 100
+            else:
+                # Формат "1x3" - без процента
+                name_hookah = item.split('x')[0]
+                count = item.split('x')[1]
+                percent_decimal = 0  # третья ячейка заменяется на 0
+            
+            # Заменяем первую ячейку
+            if name_hookah == '1':
+                first_cell = 40
+            elif name_hookah == '2':
+                first_cell = 52
+            elif name_hookah == 'Cel':
+                first_cell = 65
+            elif name_hookah == 'Rub':
+                first_cell = 78
+            elif name_hookah == 'Pum':
+                first_cell = 45
+            elif name_hookah == 'Ex':
+                first_cell = 48
+            elif name_hookah == 'Of':
+                first_cell = 2.8
+            else:
+                first_cell = float(name_hookah)
+            
+            count_num = float(count)
+            
+            response += f"• {item} → [{first_cell}, {count_num}, {percent_decimal}]\n"
+            salary += first_cell * (1 - percent_decimal) * count_num * 0.10
+            
+        except:
+            response += f"• {item} → Ошибка формата\n"
+    
+    response += f"\n💰 Итоговая зарплата: {salary:.2f} руб."
+    await update.message.reply_text(response)
+    return ConversationHandler.END
+
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    await update.message.reply_text(f'Вы сказали: {text}')
+
+async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print(f"Update {update} caused error {context.error}")
+
+def main():
+    print("Запуск бота...")
+    
+    app = Application.builder().token(BOT_TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start_command))
+    app.add_handler(CommandHandler("help", help_command))
+    
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("salary", salary_command)],
+        states={
+            WAITING_REPORT: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_report)]
+        },
+        fallbacks=[]
+    )
+    app.add_handler(conv_handler)
+
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_error_handler(error)
+
+    print("Бот запущен...")
+    app.run_polling(poll_interval=3)
+
+if __name__ == "__main__":
+    main()
