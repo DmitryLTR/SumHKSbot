@@ -3,10 +3,8 @@ from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 
-# Загружаем переменные из .env файла
 load_dotenv()
 
-# Получаем токен
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
@@ -32,7 +30,9 @@ async def salary_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     items = user_text.split(",")
-    salary = 0
+    salary_18 = 0
+    salary_14_without_discount = 0
+    salary_18_without_discount = 0
     
     response = "Обработанные данные:\n"
     for item in items:
@@ -73,12 +73,17 @@ async def handle_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
             count_num = float(count)
             
             response += f"• {item} → [{first_cell}, {count_num}, {percent_decimal}]\n"
-            salary += first_cell * (1 - percent_decimal) * count_num * 0.10
+            salary_14_without_discount += first_cell * count_num * 0.14
+            salary_18_without_discount += first_cell * count_num * 0.18
+            salary_18 += first_cell * (1 - percent_decimal) * count_num * 0.18
+            
             
         except:
             response += f"• {item} → Ошибка формата\n"
     
-    response += f"\n💰 Итоговая зарплата: {salary:.2f} руб."
+    response += f"\n💰 Итоговая зарплата при 18%: {salary_18:.2f} руб."
+    response += f"\n💰 Итоговая зарплата при 14%(без учета скидок): {salary_14_without_discount:.2f} руб."
+    response += f"\n💰 Итоговая зарплата при 18%(без учета скидок): {salary_18_without_discount:.2f} руб."
     await update.message.reply_text(response)
     return ConversationHandler.END
 
