@@ -51,24 +51,24 @@ async def handle_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 name_hookah = item.split('x')[0]
                 count = item.split('x')[1]
                 percent_decimal = 0  # третья ячейка заменяется на 0
-            
-            # Заменяем первую ячейку
-            if name_hookah == '1':
-                first_cell = 40
-            elif name_hookah == '2':
-                first_cell = 52
-            elif name_hookah == 'Cel':
-                first_cell = 65
-            elif name_hookah == 'Rub':
-                first_cell = 78
-            elif name_hookah == 'Pum':
-                first_cell = 45
-            elif name_hookah == 'Ex':
-                first_cell = 48
-            elif name_hookah == 'Of':
-                first_cell = 2.8
-            else:
-                first_cell = float(name_hookah)
+                
+            match name_hookah:
+                case '1':
+                    first_cell = 40
+                case '2':
+                    first_cell = 52
+                case 'Cel':
+                    first_cell = 65
+                case 'Rub':
+                    first_cell = 78
+                case 'Pum':
+                    first_cell = 45
+                case 'Ex':
+                    first_cell = 48
+                case 'Of':
+                    first_cell = 2.8
+                case _:
+                    first_cell = float(name_hookah)
             
             count_num = float(count)
             
