@@ -1,7 +1,10 @@
+import importlib
 import os
+import pkgutil
+import commands
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
+from telegram.ext import Application, MessageHandler, filters, ContextTypes
 from commands.command_processor import CommandProcessor
 from typing import List
 
@@ -9,7 +12,9 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-
+def load_all_processors():
+    for _, module_name, _ in pkgutil.iter_modules(commands.__path__):
+        importlib.import_module(f"{commands.__name__}.{module_name}")
 
 async def router(update: Update, context: ContextTypes.DEFAULT_TYPE, processors: List[CommandProcessor]):
     text = update.message.text.strip()
@@ -28,6 +33,7 @@ async def router(update: Update, context: ContextTypes.DEFAULT_TYPE, processors:
 # ======================================
 
 def main():
+    load_all_processors()
     processors = [cls() for cls in CommandProcessor.__subclasses__()]
     print("Найдены процессоры:")
     for p in processors:
@@ -38,8 +44,8 @@ def main():
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await router(update, context, processors)
 
-    # ✅ 4. Один универсальный обработчик
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, wrapper))
+    app.add_handler(MessageHandler(filters.COMMAND, wrapper))
+    app.add_handler(MessageHandler(filters.TEXT, wrapper))
 
     print("✅ Бот запущен")
     app.run_polling()

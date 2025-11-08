@@ -4,10 +4,10 @@ from telegram import Update
 class SalaryCommandProcessor(CommandProcessor):
     
     def supports(self, command: str, context) -> bool:
-        return command == '/salary' or context.user_data['state'] == 'WAITING_REPORT'
+        return command == '/salary' or context.user_data.get('state') == 'WAITING_REPORT'
     
     async def process(self, message: Update, context):
-        if context.user_data['state'] == 'WAITING_REPORT':
+        if context.user_data.get('state') == 'WAITING_REPORT':
             context.user_data['state'] = None
             return await self.handle_report(message)
             
@@ -15,7 +15,7 @@ class SalaryCommandProcessor(CommandProcessor):
                                         'Пример: 1x5(20), 2x4(30)')
         context.user_data['state'] = 'WAITING_REPORT'
         
-    async def handle_report(update: Update):
+    async def handle_report(self, update: Update):
         user_text = update.message.text
         items = user_text.split(",")
         salary_18 = 0
@@ -73,7 +73,6 @@ class SalaryCommandProcessor(CommandProcessor):
         response += f"\n💰 Итоговая зарплата при 14%(без учета скидок): {salary_14_without_discount:.2f} руб."
         response += f"\n💰 Итоговая зарплата при 18%(без учета скидок): {salary_18_without_discount:.2f} руб."
         await update.message.reply_text(response)
-        return ConversationHandler.END
     
     def can_access(self, user) -> bool:
         return True

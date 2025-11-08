@@ -4,11 +4,11 @@ from telegram import Update
 class CommandProcessor(ABC):
 
     @abstractmethod
-    def supports(self, command: str) -> bool:
+    def supports(self, command: str, context) -> bool:
         pass 
     
     @abstractmethod
-    async def process(self, message: Update):
+    async def process(self, message: Update, context):
         pass
     
     @abstractmethod

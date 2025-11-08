@@ -3,11 +3,11 @@ from telegram import Update
 
 class HelpCommandProcessor(CommandProcessor):
     
-    def supports(self, command: str) -> bool:
+    def supports(self, command: str, context) -> bool:
         return command == '/help'
     
-    async def process(self, message: Update):
-        await update.message.reply_text(
+    async def process(self, message: Update, context):
+        await message.message.reply_text(
             "Доступные команды:\n"
             "/start - запуск бота\n"
             "/salary - подсчет зп кальян мастера за смену\n"
