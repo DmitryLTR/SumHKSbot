@@ -11,7 +11,7 @@ class HelpCommandProcessor(CommandProcessor):
             "Доступные команды:\n"
             "/start - запуск бота\n"
             "/salary - подсчет зп кальян мастера за смену\n"
-            "Пример: "
+            "/tbc_calculator - калькулятор табака"
         )
     
     def can_access(self, user) -> bool:
